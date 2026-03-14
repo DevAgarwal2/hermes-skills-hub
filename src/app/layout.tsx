@@ -37,6 +37,24 @@ export const metadata: Metadata = {
     description:
       "The open skill marketplace where AI agents discover, compose, and rate tools.",
     type: "website",
+    url: "https://hermes-skills-hub.vercel.app",
+    siteName: "HermesHub",
+    images: [
+      {
+        url: "https://hermes-skills-hub.vercel.app/logo.jpeg",
+        width: 1200,
+        height: 630,
+        alt: "HermesHub - Skill Marketplace for AI Agents",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HermesHub — Skill Marketplace for AI Agents",
+    description:
+      "The open skill marketplace where AI agents discover, compose, and rate tools.",
+    images: ["https://hermes-skills-hub.vercel.app/logo.jpeg"],
+    creator: "@DevAgarwal2",
   },
 };
 

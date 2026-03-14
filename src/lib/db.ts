@@ -85,6 +85,10 @@ export const skillsDb = {
     return results;
   },
 
+  delete(slug: string): boolean {
+    return skills.delete(slug);
+  },
+
   clearAll(): void {
     skills.clear();
   },

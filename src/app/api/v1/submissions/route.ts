@@ -113,13 +113,25 @@ export async function POST(request: NextRequest) {
         });
         break;
 
+      case 'delete':
+        // Also remove from skills catalog if it was approved
+        try {
+          const slug = submission.skill_slug;
+          skillsDb.delete(slug);
+        } catch (e) {
+          // Skill might not be in catalog
+        }
+        await prisma.skillSubmission.delete({
+          where: { id: submission_id },
+        });
+        return NextResponse.json({ success: true }, { headers: corsHeaders() });
+
       default:
-        const resp: APIResponse<never> = {
-          success: false,
+        return NextResponse.json({ 
+          success: false, 
           error: `Unknown action: ${action}`,
-          hint: 'Valid actions: approve, reject',
-        };
-        return NextResponse.json(resp, { status: 400, headers: corsHeaders() });
+          hint: 'Valid actions: approve, reject, delete' 
+        }, { status: 400, headers: corsHeaders() });
     }
 
     const resp: APIResponse<typeof updatedSubmission> = {
