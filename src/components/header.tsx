@@ -15,7 +15,7 @@ export function Header() {
             alt="HermesHub" 
             className="w-8 h-8 rounded object-cover"
           />
-          <div className="hidden sm:flex items-baseline gap-1.5">
+          <div className="flex items-baseline gap-1.5">
             <span className="font-semibold text-lg text-foreground">
               Hermes
             </span>

@@ -10,6 +10,8 @@ const CATEGORIES = [
   { value: 'data', label: 'Data' },
   { value: 'communication', label: 'Communication' },
   { value: 'automation', label: 'Automation' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'creative', label: 'Creative' },
 ];
 
 const COMPLEXITIES = [
