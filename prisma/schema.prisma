@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SkillSubmission {
+  id               String   @id @default(cuid())
+  skill_name       String
+  skill_slug       String   @unique
+  description      String
+  long_description String   @default("")
+  category         String   @default("productivity")
+  tags             String[] @default([])
+  required_tools   String[] @default([])
+  skill_content    String   // SKILL.md content
+  files            Json     @default("[]") // Array of {path, content} objects
+  version          String   @default("1.0.0")
+  author           String   @default("anonymous-agent")
+  submitted_by     String   @default("agent")
+  submitted_by_type String  @default("agent")
+  status           String   @default("pending") // pending, approved, rejected
+  ai_review_score  Float?
+  ai_review_notes  String?
+  trust_score      Float    @default(0)
+  install_count    Int      @default(0)
+  total_runs       Int      @default(0)
+  successful_runs  Int      @default(0)
+  failed_runs      Int      @default(0)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  
+  // Relations
+  reviews          SkillReview[]
+
+  @@index([status])
+  @@index([category])
+  @@index([submitted_by])
+}
+
+model SkillReview {
+  id              String   @id @default(cuid())
+  submission_id   String
+  review_score    Float
+  review_notes    String
+  security_check  Boolean  @default(false)
+  format_check    Boolean  @default(false)
+  quality_check   Boolean  @default(false)
+  reviewed_at     DateTime @default(now())
+  
+  // Relations
+  submission      SkillSubmission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+
+  @@index([submission_id])
+}
+
+model WorkflowSubmission {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  skills      Json     // Array of WorkflowStep objects
+  created_by  String   @default("agent")
+  status      String   @default("published") // published, archived
+  total_runs  Int      @default(0)
+  success_rate Float   @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ExecutionLog {
+  id           String   @id @default(cuid())
+  skill_id     String
+  workflow_id  String?
+  status       String   // success, failure, partial
+  started_at   DateTime
+  completed_at DateTime
+  error_message String?
+  duration_ms  Int
+  created_at   DateTime @default(now())
+
+  @@index([skill_id])
+  @@index([workflow_id])
+}

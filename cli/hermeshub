@@ -1,0 +1,368 @@
+#!/usr/bin/env bash
+# hermeshub-cli — A command-line interface for HermesHub skill marketplace
+# Agents and humans can use this to search, browse, install, and compose skills.
+#
+# Usage:
+#   hermeshub search [query]          Search skills by keyword
+#   hermeshub list                    List all available skills
+#   hermeshub info <slug>             Show skill details
+#   hermeshub install <slug>          Install a skill
+#   hermeshub compose <goal>          Compose a workflow from a goal
+#   hermeshub skill-md                Fetch the full SKILL.md agent guide
+#   hermeshub log <slug> <status>     Log an execution result (success|failure|partial)
+#
+# Environment:
+#   HERMESHUB_URL   Base URL (default: https://hermeshub.vercel.app)
+
+set -euo pipefail
+
+HERMESHUB_URL="${HERMESHUB_URL:-https://hermeshub.vercel.app}"
+API="${HERMESHUB_URL}/api/v1"
+
+# Colors (only if terminal supports them)
+if [ -t 1 ]; then
+  BOLD="\033[1m"
+  DIM="\033[2m"
+  AMBER="\033[33m"
+  GREEN="\033[32m"
+  RED="\033[31m"
+  RESET="\033[0m"
+else
+  BOLD="" DIM="" AMBER="" GREEN="" RED="" RESET=""
+fi
+
+usage() {
+  echo -e "${BOLD}hermeshub-cli${RESET} — HermesHub skill marketplace"
+  echo ""
+  echo -e "  ${AMBER}search${RESET} [query]          Search skills by keyword"
+  echo -e "  ${AMBER}list${RESET}                    List all available skills"
+  echo -e "  ${AMBER}info${RESET} <slug>             Show detailed skill info"
+  echo -e "  ${AMBER}install${RESET} <slug>          Install a skill"
+  echo -e "  ${AMBER}compose${RESET} <goal>          Compose a workflow from a goal"
+  echo -e "  ${AMBER}skill-md${RESET}                Fetch the SKILL.md agent guide"
+  echo -e "  ${AMBER}log${RESET} <slug> <status>     Log execution result (success|failure|partial)"
+  echo ""
+  echo -e "  ${DIM}Set HERMESHUB_URL to point to a different instance.${RESET}"
+  echo -e "  ${DIM}Current: ${HERMESHUB_URL}${RESET}"
+}
+
+# Helpers
+fetch_json() {
+  curl -sf -H "Accept: application/json" "$1" 2>/dev/null
+}
+
+post_json() {
+  local url="$1"
+  local body="${2:-{}}"
+  curl -sf -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d "$body" "$url" 2>/dev/null
+}
+
+trust_color() {
+  local score=$1
+  local rounded
+  rounded=$(printf "%.0f" "$score")
+  if [ "$rounded" -ge 85 ]; then
+    echo -e "${GREEN}${score}${RESET}"
+  elif [ "$rounded" -ge 65 ]; then
+    echo -e "${AMBER}${score}${RESET}"
+  else
+    echo -e "${RED}${score}${RESET}"
+  fi
+}
+
+# Commands
+
+cmd_list() {
+  echo -e "${BOLD}HermesHub — All Skills${RESET}"
+  echo ""
+
+  local data
+  data=$(fetch_json "${API}/skills")
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Could not reach HermesHub at ${HERMESHUB_URL}${RESET}" >&2
+    exit 1
+  fi
+
+  # Parse with built-in tools or python/jq
+  if command -v jq &>/dev/null; then
+    echo "$data" | jq -r '.data[] | "\(.trust_score)\t\(.slug)\t\(.description)"' | while IFS=$'\t' read -r score slug desc; do
+      printf "  $(trust_color "$score")  ${BOLD}%-30s${RESET} %s\n" "$slug" "$desc"
+    done
+  else
+    # Fallback: just print raw JSON
+    echo "$data"
+  fi
+}
+
+cmd_search() {
+  local query="$1"
+  echo -e "${BOLD}Searching:${RESET} ${query}"
+  echo ""
+
+  local encoded
+  encoded=$(printf '%s' "$query" | sed 's/ /%20/g')
+  local data
+  data=$(fetch_json "${API}/skills?query=${encoded}")
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Could not reach HermesHub at ${HERMESHUB_URL}${RESET}" >&2
+    exit 1
+  fi
+
+  if command -v jq &>/dev/null; then
+    local count
+    count=$(echo "$data" | jq -r '.meta.total // 0')
+    echo -e "${DIM}${count} result(s)${RESET}"
+    echo ""
+
+    echo "$data" | jq -r '.data[] | "\(.trust_score)\t\(.slug)\t\(.description)"' | while IFS=$'\t' read -r score slug desc; do
+      printf "  $(trust_color "$score")  ${BOLD}%-30s${RESET} %s\n" "$slug" "$desc"
+    done
+  else
+    echo "$data"
+  fi
+}
+
+cmd_info() {
+  local slug="$1"
+  local data
+  data=$(fetch_json "${API}/skills/${slug}")
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Skill '${slug}' not found or HermesHub unreachable.${RESET}" >&2
+    exit 1
+  fi
+
+  if command -v jq &>/dev/null; then
+    local name score desc category complexity version author runs installs
+    name=$(echo "$data" | jq -r '.data.name')
+    score=$(echo "$data" | jq -r '.data.trust_score')
+    desc=$(echo "$data" | jq -r '.data.long_description')
+    category=$(echo "$data" | jq -r '.data.category')
+    complexity=$(echo "$data" | jq -r '.data.complexity')
+    version=$(echo "$data" | jq -r '.data.version')
+    author=$(echo "$data" | jq -r '.data.author')
+    runs=$(echo "$data" | jq -r '.data.total_runs')
+    installs=$(echo "$data" | jq -r '.data.install_count')
+
+    echo -e "${BOLD}${name}${RESET}  $(trust_color "$score")"
+    echo -e "${DIM}${category} / ${complexity} / v${version} / by ${author}${RESET}"
+    echo ""
+    echo -e "$desc"
+    echo ""
+    echo -e "  Runs: ${BOLD}${runs}${RESET}  Installs: ${BOLD}${installs}${RESET}"
+    echo ""
+
+    # Tags
+    local tags
+    tags=$(echo "$data" | jq -r '.data.tags | map("#" + .) | join("  ")')
+    echo -e "  ${DIM}${tags}${RESET}"
+    echo ""
+
+    # Required tools
+    local tools
+    tools=$(echo "$data" | jq -r '.data.required_tools | join(", ")')
+    echo -e "  Tools: ${AMBER}${tools}${RESET}"
+    echo ""
+
+    # Compatible
+    local compat
+    compat=$(echo "$data" | jq -r '.data.compatible_with | join(", ")')
+    if [ -n "$compat" ] && [ "$compat" != "null" ]; then
+      echo -e "  Compatible: ${compat}"
+    fi
+
+    echo ""
+    echo -e "  ${DIM}Install: hermeshub install ${slug}${RESET}"
+  else
+    echo "$data"
+  fi
+}
+
+cmd_install() {
+  local slug="$1"
+  echo -e "Installing ${BOLD}${slug}${RESET}..."
+
+  local data
+  data=$(post_json "${API}/skills/${slug}/install")
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Could not install '${slug}'. Skill not found or HermesHub unreachable.${RESET}" >&2
+    exit 1
+  fi
+
+  if command -v jq &>/dev/null; then
+    local success
+    success=$(echo "$data" | jq -r '.success')
+    if [ "$success" = "true" ]; then
+      local name version instructions
+      name=$(echo "$data" | jq -r '.data.skill_name')
+      version=$(echo "$data" | jq -r '.data.version')
+      instructions=$(echo "$data" | jq -r '.data.install_instructions')
+
+      echo -e "${GREEN}Installed ${name} v${version}${RESET}"
+      echo ""
+      echo "$instructions"
+    else
+      local error
+      error=$(echo "$data" | jq -r '.error // "Unknown error"')
+      echo -e "${RED}Error: ${error}${RESET}" >&2
+      exit 1
+    fi
+  else
+    echo "$data"
+  fi
+}
+
+cmd_compose() {
+  local goal="$1"
+  echo -e "Composing workflow for: ${BOLD}${goal}${RESET}"
+  echo ""
+
+  local data
+  data=$(curl -sf -X POST -H "Content-Type: application/json" -H "Accept: application/json" \
+    --data-raw "{\"goal\":\"${goal}\"}" "${API}/compose" 2>/dev/null)
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Could not compose workflow. HermesHub unreachable.${RESET}" >&2
+    exit 1
+  fi
+
+  if command -v jq &>/dev/null; then
+    local success
+    success=$(echo "$data" | jq -r '.success')
+    if [ "$success" = "true" ]; then
+      local wf_name wf_desc
+      wf_name=$(echo "$data" | jq -r '.data.name')
+      wf_desc=$(echo "$data" | jq -r '.data.description')
+
+      echo -e "${BOLD}${wf_name}${RESET}"
+      echo -e "${DIM}${wf_desc}${RESET}"
+      echo ""
+
+      echo -e "${BOLD}Steps:${RESET}"
+      echo "$data" | jq -r '.data.skills[] | "  \(.order). \(.skill_name) (\(.skill_slug))"'
+
+      echo ""
+      echo -e "${DIM}Workflow ID: $(echo "$data" | jq -r '.data.id')${RESET}"
+    else
+      local error
+      error=$(echo "$data" | jq -r '.error // "Unknown error"')
+      echo -e "${RED}Error: ${error}${RESET}" >&2
+      exit 1
+    fi
+  else
+    echo "$data"
+  fi
+}
+
+cmd_skill_md() {
+  curl -sf "${HERMESHUB_URL}/skill.md" 2>/dev/null || {
+    echo -e "${RED}Error: Could not fetch SKILL.md from ${HERMESHUB_URL}${RESET}" >&2
+    exit 1
+  }
+}
+
+cmd_log() {
+  local slug="$1"
+  local status="$2"
+
+  if [[ "$status" != "success" && "$status" != "failure" && "$status" != "partial" ]]; then
+    echo -e "${RED}Error: status must be one of: success, failure, partial${RESET}" >&2
+    exit 1
+  fi
+
+  local success_bool="false"
+  if [ "$status" = "success" ]; then
+    success_bool="true"
+  fi
+
+  local data
+  data=$(curl -sf -X POST -H "Content-Type: application/json" -H "Accept: application/json" \
+    --data-raw "{\"success\":${success_bool},\"duration_ms\":1000}" "${API}/skills/${slug}/log" 2>/dev/null)
+
+  if [ -z "$data" ]; then
+    echo -e "${RED}Error: Could not log execution for '${slug}'.${RESET}" >&2
+    exit 1
+  fi
+
+  if command -v jq &>/dev/null; then
+    local success
+    success=$(echo "$data" | jq -r '.success')
+    if [ "$success" = "true" ]; then
+      local new_score
+      new_score=$(echo "$data" | jq -r '.data.skill.trust_score')
+      echo -e "${GREEN}Logged ${status} for ${slug}.${RESET} Trust score: $(trust_color "$new_score")"
+    else
+      local error
+      error=$(echo "$data" | jq -r '.error // "Unknown error"')
+      echo -e "${RED}Error: ${error}${RESET}" >&2
+      exit 1
+    fi
+  else
+    echo "$data"
+  fi
+}
+
+# Main dispatch
+
+if [ $# -lt 1 ]; then
+  usage
+  exit 0
+fi
+
+case "$1" in
+  list)
+    cmd_list
+    ;;
+  search)
+    if [ $# -lt 2 ]; then
+      echo -e "${RED}Usage: hermeshub search <query>${RESET}" >&2
+      exit 1
+    fi
+    shift
+    cmd_search "$*"
+    ;;
+  info)
+    if [ $# -lt 2 ]; then
+      echo -e "${RED}Usage: hermeshub info <slug>${RESET}" >&2
+      exit 1
+    fi
+    cmd_info "$2"
+    ;;
+  install)
+    if [ $# -lt 2 ]; then
+      echo -e "${RED}Usage: hermeshub install <slug>${RESET}" >&2
+      exit 1
+    fi
+    cmd_install "$2"
+    ;;
+  compose)
+    if [ $# -lt 2 ]; then
+      echo -e "${RED}Usage: hermeshub compose <goal>${RESET}" >&2
+      exit 1
+    fi
+    shift
+    cmd_compose "$*"
+    ;;
+  skill-md)
+    cmd_skill_md
+    ;;
+  log)
+    if [ $# -lt 3 ]; then
+      echo -e "${RED}Usage: hermeshub log <slug> <success|failure|partial>${RESET}" >&2
+      exit 1
+    fi
+    cmd_log "$2" "$3"
+    ;;
+  help|--help|-h)
+    usage
+    ;;
+  *)
+    echo -e "${RED}Unknown command: $1${RESET}" >&2
+    echo ""
+    usage
+    exit 1
+    ;;
+esac
