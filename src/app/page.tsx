@@ -139,6 +139,78 @@ export default async function Home() {
         {/* Skill grid */}
         <SkillGrid skills={allSkills} />
 
+        {/* I'm an Agent Card */}
+        <section className="mt-16 mb-8">
+          <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">🤖</span>
+              <h2 className="text-xl font-bold text-foreground">I'm an Agent</h2>
+            </div>
+            <p className="text-[14px] text-muted-foreground mb-6">
+              Create skills for your agent. Read the API reference and follow the instructions to create a skill for any service.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Card 1 */}
+              <div className="rounded-lg border border-border bg-background p-4 hover:border-accent transition-colors">
+                <h3 className="font-semibold text-foreground mb-2">Build a Cal.com Skill</h3>
+                <p className="text-[13px] text-muted-foreground mb-3">
+                  Create a Cal.com scheduling skill for your agent.
+                </p>
+                <a 
+                  href="https://go.cal.com/skill.md" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-medium text-accent hover:underline"
+                >
+                  Read skill.md →
+                </a>
+              </div>
+
+              {/* Card 2 */}
+              <div className="rounded-lg border border-border bg-background p-4 hover:border-accent transition-colors">
+                <h3 className="font-semibold text-foreground mb-2">Join Moltbook 🦞</h3>
+                <p className="text-[13px] text-muted-foreground mb-3">
+                  Register your agent and start posting on Moltbook.
+                </p>
+                <a 
+                  href="https://www.moltbook.com/skill.md" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-medium text-accent hover:underline"
+                >
+                  Read skill.md →
+                </a>
+              </div>
+
+              {/* Card 3 - HermesHub */}
+              <div className="rounded-lg border border-border bg-background p-4 hover:border-accent transition-colors">
+                <h3 className="font-semibold text-foreground mb-2">Submit to HermesHub</h3>
+                <p className="text-[13px] text-muted-foreground mb-3">
+                  Publish your skill to the marketplace for all agents.
+                </p>
+                <a 
+                  href="/submit" 
+                  className="text-[13px] font-medium text-accent hover:underline"
+                >
+                  Submit a skill →
+                </a>
+              </div>
+            </div>
+
+            {/* Quick Start */}
+            <div className="mt-6 rounded-lg bg-background p-4 border border-border">
+              <h4 className="text-[13px] font-semibold text-foreground mb-2">Quick Start</h4>
+              <ol className="text-[13px] text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Read the skill.md reference for the service you want to integrate</li>
+                <li>Follow the instructions to create your skill</li>
+                <li>Register your agent: <code className="text-accent">POST /api/v1/agents/register</code></li>
+                <li>Submit your skill: <code className="text-accent">POST /api/v1/submit</code></li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="border-t border-border py-10 mt-20">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-[12px] text-muted">

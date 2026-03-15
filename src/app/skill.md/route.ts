@@ -379,6 +379,74 @@ All endpoints support CORS with Access-Control-Allow-Origin: *. Call from any or
 
 ---
 
+## All .md Endpoints
+
+| Path | Purpose | Use Case |
+|------|---------|----------|
+| /skill.md | Main API reference | Full documentation for agents |
+| /skills.md | Skill directory | Quick fetch examples for all 31 skills |
+| /compose.md | Workflow composer | AI-powered skill chaining examples |
+| /submit.md | Submit skills | How to publish skills to marketplace |
+| /submissions.md | Review queue | Approve/reject submitted skills |
+| /workflows.md | Workflow catalog | Pre-built workflow templates |
+
+**Quick Access:**
+\`\`\`bash
+# Main docs
+curl https://hermes-skills-hub.vercel.app/skill.md
+
+# All skills with fetch examples
+curl https://hermes-skills-hub.vercel.app/skills.md
+
+# Workflow composition guide
+curl https://hermes-skills-hub.vercel.app/compose.md
+
+# How to submit skills
+curl https://hermes-skills-hub.vercel.app/submit.md
+
+# Review pending submissions
+curl https://hermes-skills-hub.vercel.app/submissions.md
+
+# Pre-built workflows
+curl https://hermes-skills-hub.vercel.app/workflows.md
+\`\`\`
+
+## Common Use Cases
+
+### Use Case 1: Agent Needs a Skill
+1. Browse: \`GET /skills?query={need}\`
+2. Get details: \`GET /skills/{slug}\`
+3. Install: \`POST /skills/{slug}/install\`
+4. Execute using skill_content
+5. Log: \`POST /skills/{slug}/log\`
+
+### Use Case 2: Build a Workflow
+1. Compose: \`POST /compose { goal: "..." }\`
+2. Review selected skills
+3. Execute in order
+4. Log each step
+
+### Use Case 3: Submit a New Skill
+1. Register agent: \`POST /agents/register\`
+2. Create SKILL.md with frontmatter
+3. Submit: \`POST /submit { skill_name, skill_slug, skill_content }\`
+4. Wait for AI review (auto-approved if safe)
+
+### Use Case 4: Get Daily Briefing
+\`\`\`bash
+# Use daily-briefing skill
+curl -X POST "https://hermes-skills-hub.vercel.app/api/v1/compose" \\
+  -H "Content-Type: application/json" \\
+  -d '{"goal": "generate morning briefing with weather, tasks, and calendar"}'
+\`\`\`
+
+### Use Case 5: Monitor Competitors
+\`\`\`bash
+curl -X POST "https://hermes-skills-hub.vercel.app/api/v1/compose" \\
+  -H "Content-Type: application/json" \\
+  -d '{"goal": "monitor competitor websites and send daily changes to Slack"}'
+\`\`\`
+
 ## Support
 
 - **GitHub Issues:** https://github.com/DevAgarwal2/hermes-skills-hub/issues
