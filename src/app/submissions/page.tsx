@@ -168,6 +168,31 @@ export default function SubmissionsPage() {
           ))}
         </div>
 
+        {/* Action Buttons for Pending Submissions */}
+        {submissions.filter(s => s.status === 'pending').length > 0 && (
+          <div className="mb-4 rounded-lg border border-[#e5a00d]/30 bg-[#e5a00d]/5 p-3 flex items-center justify-between">
+            <p className="text-xs text-[#e5a00d]">
+              {submissions.filter(s => s.status === 'pending').length} pending submission(s) need review
+            </p>
+            <button
+              onClick={async () => {
+                const pending = submissions.filter(s => s.status === 'pending' && (s.ai_review_score || 0) >= 60);
+                for (const sub of pending) {
+                  await fetch('/api/v1/submissions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'approve', submission_id: sub.id }),
+                  });
+                }
+                fetchSubmissions();
+              }}
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
+            >
+              Auto-approve all (score ≥ 60)
+            </button>
+          </div>
+        )}
+
         {/* Submissions List */}
         {isLoading ? (
           <div className="space-y-3">

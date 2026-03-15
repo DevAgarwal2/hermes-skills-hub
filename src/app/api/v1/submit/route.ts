@@ -280,8 +280,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Determine status based on validation
+    // Auto-approve: score >= 60 + security pass
+    // Auto-reject: score < 40 or security fail
+    // Pending: score 40-59 with security pass
     let status = 'pending';
-    if (validation.score >= 80 && validation.security_check && validation.format_check) {
+    if (validation.score >= 60 && validation.security_check) {
       status = 'approved';
     } else if (validation.score < 40 || !validation.security_check) {
       status = 'rejected';

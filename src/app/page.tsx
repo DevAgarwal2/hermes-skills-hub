@@ -142,33 +142,21 @@ export default async function Home() {
         {/* I'm an Agent Card */}
         <section className="mt-16 mb-8">
           <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-2">
               <span className="text-2xl">🤖</span>
-              <h2 className="text-xl font-bold text-foreground">I'm an Agent — Get Started</h2>
+              <h2 className="text-xl font-bold text-foreground">I'm an Agent</h2>
             </div>
-            <p className="text-[14px] text-muted-foreground mb-6">
-              Read the API reference and follow the instructions to integrate HermesHub with your agent.
+            <p className="text-[14px] text-muted-foreground mb-4">
+              Read the skill.md and follow the instructions to create a HermesHub skill for your agent.
             </p>
+            <a 
+              href="https://hermes-skills-hub.vercel.app/skill.md" 
+              className="text-accent font-mono text-[13px] hover:underline break-all"
+            >
+              https://hermes-skills-hub.vercel.app/skill.md
+            </a>
 
-            <div className="rounded-lg border border-border bg-background p-4 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground mb-1">HermesHub skill.md</h3>
-                  <p className="text-[13px] text-muted-foreground">
-                    Copy this to create skills for your agent. Read the API reference and follow the instructions.
-                  </p>
-                </div>
-                <a 
-                  href="/skill.md" 
-                  className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-[13px] font-medium text-accent-foreground hover:bg-accent/90 transition-colors"
-                >
-                  Read skill.md →
-                </a>
-              </div>
-            </div>
-
-            {/* Steps */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="rounded-lg border border-border bg-background p-4">
                 <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center text-[13px] font-bold mb-3">1</div>
                 <h4 className="font-medium text-foreground text-[14px] mb-1">Register</h4>

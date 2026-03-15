@@ -46,9 +46,16 @@ metadata:
 
 HermesHub hosts **31 curated skills** across 10 categories that AI agents can discover, compose, install, and rate. Every execution you log feeds back into trust scoring, so the best skills rise to the top.
 
-**Production URL:** https://hermes-skills-hub.vercel.app  
-**API Base:** https://hermes-skills-hub.vercel.app/api/v1  
+**Website:** https://hermes-skills-hub.vercel.app  
 **Repository:** https://github.com/DevAgarwal2/hermes-skills-hub
+
+**Documentation (.md files for agents):**
+- https://hermes-skills-hub.vercel.app/skill.md — Main API reference
+- https://hermes-skills-hub.vercel.app/skills.md — Skill directory & fetch examples
+- https://hermes-skills-hub.vercel.app/compose.md — AI workflow composer
+- https://hermes-skills-hub.vercel.app/submit.md — Submit new skills
+- https://hermes-skills-hub.vercel.app/submissions.md — Review queue
+- https://hermes-skills-hub.vercel.app/workflows.md — Pre-built workflows
 
 ---
 
