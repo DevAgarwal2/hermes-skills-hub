@@ -4,6 +4,10 @@ import { skillsDatabase } from '@/lib/skills-data';
 import prisma from '@/lib/prisma';
 import type { Skill } from '@/lib/types';
 
+// Force dynamic rendering - always fetch fresh data from Neon DB
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
